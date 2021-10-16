@@ -44,4 +44,6 @@ class CustomerRepositoryTest {
                     assertThat(c).isEqualToComparingFieldByField(customer);
                 });
     }
+
+
 }

@@ -13,8 +13,8 @@ public class CustomerRegistrationService {
         this.customerRepository = customerRepository;
     }
 
-    public void registerNewCustomer(CustomerRegistrationRequest reguest) {
-
+    public void registerNewCustomer(CustomerRegistrationRequest request) {
+        System.out.println("Hello");
         // 1. PhoneNumber is taken
         // 2. if taken lets check if belong to same customer
         // - 2.1 if yes return
