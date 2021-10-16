@@ -25,7 +25,7 @@ class CustomerRepositoryTest {
     }
 
     @Test
-    void itShouldSaveCustomer() {
+    public void itShouldSaveCustomer() {
         //Given
         UUID id = UUID.randomUUID();
         Customer customer = new Customer(id, "Abel", "123456789");
