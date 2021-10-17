@@ -16,4 +16,5 @@ public interface CustomerRepository extends CrudRepository<Customer, UUID> {
     )
     Optional<Customer> selectCustomerByPhoneNumber(
             @Param("phone_number") String phoneNumber);
+
 }
