@@ -9,13 +9,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.*;
 @DataJpaTest
 class CustomerRegistrationServiceTest {
-
-    private UUID id = UUID.randomUUID();
-    private Customer customer = new Customer(id, "Abel", "123456789");
-
-    private  CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
-
-    private CustomerRegistrationService underTest = new CustomerRegistrationService(request);
+    
 
 @Autowired
  private CustomerRepository customerRepository;
@@ -25,7 +19,10 @@ class CustomerRegistrationServiceTest {
     @Test
     void itShouldRegisterNewCustomer() {
         //Given
-
+        UUID id = UUID.randomUUID();
+        Customer customer = new Customer(id, "Abel", "123456789");
+        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
+        CustomerRegistrationService underTest = new CustomerRegistrationService(request);
         customerRepository.save(customer);
         //When
 
