@@ -10,14 +10,11 @@ import java.util.Optional;
 @Service
 public class CustomerRegistrationService {
 
-    private final CustomerRegistrationRequest request;
-
     private final CustomerRepository customerRepository;
 
 
     @Autowired
-    public CustomerRegistrationService(CustomerRegistrationRequest request, CustomerRepository customerRepository) {
-        this.request = request;
+    public CustomerRegistrationService(CustomerRepository customerRepository) {
         this.customerRepository = customerRepository;
 
     }

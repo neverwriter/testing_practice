@@ -1,93 +1,162 @@
 package com.amigoscode.testing.customer;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
 
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
+import static org.mockito.Mockito.never;
 
-@DataJpaTest
+
 class CustomerRegistrationServiceTest {
 
 
-    @Autowired
+    @Mock
     private CustomerRepository customerRepository;
 
+    @Captor
+    private ArgumentCaptor<Customer> customerArgumentCaptor;
 
-    @Test
-    void itShouldRegisterNewCustomer() {
-        //Given
-        UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID();
+    private CustomerRegistrationService underTest;
 
-        Customer customer1 = new Customer(id1, "Abel", "123456789"), customer2 = new Customer(id2, "Edgar", "600600600");
-
-        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer1);
-        CustomerRegistrationService underTest = new CustomerRegistrationService(request, customerRepository);
-
-        customerRepository.save(customer2);
-
-        //When
-
-        underTest.registerNewCustomer(request);
-
-        //Then
-        Optional<Customer> optionalCustomer = customerRepository.findById(id2);
-        assertThat(optionalCustomer)
-                .isPresent()
-                .hasValueSatisfying(c -> {
-                    assertThat(c).isEqualToComparingFieldByField(customer2);
-                });
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+        underTest = new CustomerRegistrationService(customerRepository);
     }
 
     @Test
-    void itShouldNotRegisterNewCustomer() {
+    void itShouldRegisterNewCustomer() {
+        //Given a phone number and a customer
+        String phoneNumber = "123456789";
+        Customer customer = new Customer(UUID.randomUUID(), "Abel", phoneNumber);
 
-        //Given
-        UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID();
-        Customer customer1 = new Customer(id1, "Abel", "123456789"), customer2 = new Customer(id2, "Abel", "123456789");
+        // ... a request
 
+        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
 
-
-        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer1);
-        CustomerRegistrationService underTest = new CustomerRegistrationService(request, customerRepository);
-
-        customerRepository.save(customer2);
+        // ... No customer with phone number passed
+        given(customerRepository.selectCustomerByPhoneNumber(phoneNumber))
+                .willReturn(Optional.empty());
 
         //When
-
         underTest.registerNewCustomer(request);
 
         //Then
+
+        then(customerRepository).should().save(customerArgumentCaptor.capture());
+        Customer customerArgumentCaptorValue = customerArgumentCaptor.getValue();
+        assertThat(customerArgumentCaptorValue).isEqualTo(customer);
+
+    }
+
+    @Test
+    void itShouldNotRegisterNewCustomerWhetCustomerExists() {
+        //Given a phone number, a customer
+        String phoneNumber = "123456789";
+        Customer customer = new Customer(UUID.randomUUID(), "Edgar", phoneNumber);
+
+        // ... a request
+
+        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
+
+        // ... an existing customer is returned
+        given(customerRepository.selectCustomerByPhoneNumber(phoneNumber))
+                .willReturn(Optional.of(customer));
+
+        //When
+        underTest.registerNewCustomer(request);
+
+        //Then
+
+        then(customerRepository).should(never()).save(any());
+//       then(customerRepository).should().selectCustomerByPhoneNumber(phoneNumber);
+//       then(customerRepository).shouldHaveNoMoreInteractions();
 
     }
 
     @Test
     void itShouldThrowAnException() {
+        //Given a phone number, a customerToRegister and customerFromDB
+        String phoneNumber = "123456789";
+        Customer customerToRegister = new Customer(UUID.randomUUID(), "Abel", phoneNumber), customerFromDB = new Customer(UUID.randomUUID(), "Edgar", phoneNumber);
 
-        //Given
-        boolean exception = false;
-        UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID();
+        // ... a request
 
-        Customer customer1 = new Customer(id1, "Abel", "123456789"), customer2 = new Customer(id2, "Edgar", "123456789");
+        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customerToRegister);
 
-        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer1);
-        CustomerRegistrationService underTest = new CustomerRegistrationService(request, customerRepository);
-
-        customerRepository.save(customer2);
+        // ... CustomerFromDB with phone number passed
+        given(customerRepository.selectCustomerByPhoneNumber(phoneNumber))
+                .willReturn(Optional.of(customerFromDB));
 
         //When
-        try {
-            underTest.registerNewCustomer(request);
-        }
-        catch(Exception e) {
-            System.out.println("We have an Exception");
-            exception = true;
-        }
-
         //Then
-        assertThat(exception).isEqualTo(true);
+        assertThatThrownBy(() -> underTest.registerNewCustomer(request))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining(String.format("Phone number [%s] is taken", phoneNumber));
+
+        //Finally
+        then(customerRepository).should(never()).save(any());
+
     }
+
+//    @Test
+//    void itShouldNotRegisterNewCustomer() {
+//
+//        //Given
+//        UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID();
+//        Customer customer1 = new Customer(id1, "Abel", "123456789"), customer2 = new Customer(id2, "Abel", "123456789");
+//
+//
+//
+//        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer1);
+//        CustomerRegistrationService underTest = new CustomerRegistrationService(request, customerRepository);
+//
+//        customerRepository.save(customer2);
+//
+//        //When
+//
+//        underTest.registerNewCustomer(request);
+//
+//        //Then
+//
+//    }
+//
+//    @Test
+//    void itShouldThrowAnException() {
+//
+//        //Given
+//        boolean exception = false;
+//        UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID();
+//
+//        Customer customer1 = new Customer(id1, "Abel", "123456789"), customer2 = new Customer(id2, "Edgar", "123456789");
+//
+//        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer1);
+//        CustomerRegistrationService underTest = new CustomerRegistrationService(request, customerRepository);
+//
+//        customerRepository.save(customer2);
+//
+//        //When
+//        try {
+//            underTest.registerNewCustomer(request);
+//        }
+//        catch(Exception e) {
+//            System.out.println("We have an Exception");
+//            exception = true;
+//        }
+//
+//        //Then
+//        assertThat(exception).isEqualTo(true);
+//    }
 }
