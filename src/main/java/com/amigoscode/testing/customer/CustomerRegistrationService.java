@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.validation.Valid;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class CustomerRegistrationService {
@@ -34,6 +35,11 @@ public class CustomerRegistrationService {
             }
             throw new IllegalStateException(String.format("Phone number [%s] is taken", phoneNumber));
         }
+
+        if(request.getCustomer().getId() == null){
+            request.getCustomer().setId(UUID.randomUUID());
+        }
+
         customerRepository.save(request.getCustomer());
 
         // 1. PhoneNumber is taken

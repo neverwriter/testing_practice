@@ -62,6 +62,33 @@ class CustomerRegistrationServiceTest {
     }
 
     @Test
+    void itShouldRegisterNewCustomerWhenIdIsNull() {
+        //Given a phone number and a customer
+        String phoneNumber = "123456789";
+        Customer customer = new Customer(null, "Abel", phoneNumber);
+
+        // ... a request
+
+        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer);
+
+        // ... No customer with phone number passed
+        given(customerRepository.selectCustomerByPhoneNumber(phoneNumber))
+                .willReturn(Optional.empty());
+
+        //When
+        underTest.registerNewCustomer(request);
+
+        //Then
+
+        then(customerRepository).should().save(customerArgumentCaptor.capture());
+        Customer customerArgumentCaptorValue = customerArgumentCaptor.getValue();
+        assertThat(customerArgumentCaptorValue)
+                .isEqualToIgnoringGivenFields(customer, "id");
+        assertThat(customerArgumentCaptorValue.getId()).isNotNull();
+
+    }
+
+    @Test
     void itShouldNotRegisterNewCustomerWhetCustomerExists() {
         //Given a phone number, a customer
         String phoneNumber = "123456789";
@@ -111,52 +138,4 @@ class CustomerRegistrationServiceTest {
 
     }
 
-//    @Test
-//    void itShouldNotRegisterNewCustomer() {
-//
-//        //Given
-//        UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID();
-//        Customer customer1 = new Customer(id1, "Abel", "123456789"), customer2 = new Customer(id2, "Abel", "123456789");
-//
-//
-//
-//        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer1);
-//        CustomerRegistrationService underTest = new CustomerRegistrationService(request, customerRepository);
-//
-//        customerRepository.save(customer2);
-//
-//        //When
-//
-//        underTest.registerNewCustomer(request);
-//
-//        //Then
-//
-//    }
-//
-//    @Test
-//    void itShouldThrowAnException() {
-//
-//        //Given
-//        boolean exception = false;
-//        UUID id1 = UUID.randomUUID(), id2 = UUID.randomUUID();
-//
-//        Customer customer1 = new Customer(id1, "Abel", "123456789"), customer2 = new Customer(id2, "Edgar", "123456789");
-//
-//        CustomerRegistrationRequest request = new CustomerRegistrationRequest(customer1);
-//        CustomerRegistrationService underTest = new CustomerRegistrationService(request, customerRepository);
-//
-//        customerRepository.save(customer2);
-//
-//        //When
-//        try {
-//            underTest.registerNewCustomer(request);
-//        }
-//        catch(Exception e) {
-//            System.out.println("We have an Exception");
-//            exception = true;
-//        }
-//
-//        //Then
-//        assertThat(exception).isEqualTo(true);
-//    }
 }
