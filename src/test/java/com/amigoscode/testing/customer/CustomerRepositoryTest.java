@@ -49,7 +49,7 @@ class CustomerRepositoryTest {
 
         //When
         Optional<Customer> optionalCustomer = underTest.selectCustomerByPhoneNumber(phoneNumber);
-        
+
         //Then
         assertThat(optionalCustomer).isNotPresent();
 
